@@ -2,7 +2,7 @@
 
 Compile with `make`.
 
-Run receiver, then run sender to start sending messages. For now, the code is hard-coded to communicate on localhost.
+Run receiver, then run sender to start sending messages. For now, code will only work on localhost, as there needs to be added a way for sender to specify IP address of the receiver.
 
 ```
 Usage: ./receiver [PORT] [USERNAME]
