@@ -1,3 +1,5 @@
+/* MIT License, by Andrew Goetz */
+
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
@@ -81,7 +83,7 @@ int main(int argc, char *argv[]) {
 void *malloc_chk(size_t size) {
 	void *p = malloc(size);
 	if(!p) {
-		fprintf(stderr, "Error: malloc failure for size %zu:\n%s", size, strerror(errno));
+		fprintf(stderr, "Error: failure to malloc %zu bytes:\n%s", size, strerror(errno));
 	}
 	return p;
 }
