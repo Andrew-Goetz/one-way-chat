@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
 	/* Get protocol number */
 	struct protoent *protoP;
 	if(!(protoP= getprotobyname("tcp"))) {
-		fprintf(stderr, "WARNING (%s): could not find tcp protocol number, defaulting to 0.\n", __func__);
+		fprintf(stderr, "WARNING (%s): could not find TCP protocol number, defaulting to 0.\n", __func__);
 		protoP->p_proto = 0;
 	}
 
@@ -52,8 +52,9 @@ int main(int argc, char *argv[]) {
 	
 	/* Bind socket */
 	struct sockaddr_in addr;
+	memset(&addr, 0, sizeof(addr));
 	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = INADDR_ANY;
+	addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	addr.sin_port = htons(arguments->port);
 	if(bind(receive_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
 		fprintf(stderr, "ERROR (%s): failure to bind socket. Try choosing a different port.\n", __func__);

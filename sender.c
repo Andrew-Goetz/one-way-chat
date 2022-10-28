@@ -11,16 +11,18 @@
 #include <netdb.h>
 #include <sys/socket.h>
 
-#define ARG_NUM 2 + 1
+#define ARG_NUM 3 + 1
 #define BUF 1000
 
 struct args {
-	int port;
+	u_int16_t port;
+	char addr[20];
 	char *username;
 };
 
 enum ARGS {
 	PORT = 1,
+	ADDRESS,
 	USERNAME
 };
 
@@ -36,7 +38,7 @@ int main(int argc, char *argv[]) {
 	/* Get protocol number */
 	struct protoent *protoP;
 	if(!(protoP= getprotobyname("tcp"))) {
-		fprintf(stderr, "WARNING (%s): could not find tcp protocol number, defaulting to 0.\n", __func__);
+		fprintf(stderr, "WARNING (%s): could not find TCP protocol number, defaulting to 0.\n", __func__);
 		protoP->p_proto = 0;
 	}
 
@@ -50,8 +52,14 @@ int main(int argc, char *argv[]) {
 
 	/* Connect to socket */
 	struct sockaddr_in addr;
+	memset(&addr, 0, sizeof(addr));
 	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = INADDR_ANY;
+	if((addr.sin_addr.s_addr = inet_addr(arguments->addr)) == INADDR_NONE) {
+		fprintf(stderr, "ERROR (%s): invalid IPv4 address provided.\n", __func__);
+		printf("%d\n", addr.sin_addr.s_addr);
+		exit_status = EXIT_FAILURE;
+		goto ERROR;
+	}
 	addr.sin_port = htons(arguments->port);
 	if(connect(send_fd, (const struct sockaddr *)&addr, sizeof(addr))) {
 		fprintf(stderr, "ERROR (%s): failure to connect to socket running at port %d. Try starting the receiver program first.\n", __func__, arguments->port);
@@ -67,7 +75,7 @@ int main(int argc, char *argv[]) {
 		printf(" [%s]:- ", arguments->username);
 		fgets(send_buf, sizeof(send_buf), stdin);
 		if(write(send_fd, send_buf, BUF) < 0) {
-			fprintf(stderr, "Error writing to socket, try again. If errors continue, restart the program.\n");
+			fprintf(stderr, "ERROR (%s): unable to write to socket, try again. If errors continue, restart the program.\n", __func__);
 		}
 	}
 
@@ -115,14 +123,15 @@ struct args *parse_args(int argc, char *argv[]) {
 		print_usage(argv[0]);
 		exit(EXIT_FAILURE);
 	}
-	
+
 	/* Initialize and return args struct */
 	struct args *arguments = malloc_chk(sizeof(struct args));
 	arguments->port = port;
+	strncpy(arguments->addr, argv[ADDRESS], sizeof(arguments->addr));
 	arguments->username = argv[USERNAME];
 	return arguments;
 }
 
 void print_usage(char *prog_name) {
-	fprintf(stderr, "Usage: %s [PORT] [USERNAME]\n", prog_name);
+	fprintf(stderr, "Usage: %s [PORT] [ADDRESS] [USERNAME]\n", prog_name);
 }
